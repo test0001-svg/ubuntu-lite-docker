@@ -1,38 +1,87 @@
-# 🖥️ Ubuntu XFCE + XRDP on Railway
+# 🖥️ Ubuntu MATE (Lite) + XRDP on Railway
 
 <p align="center">
-  <strong>Run a lightweight Ubuntu desktop on Railway and connect from Windows 10 using Remote Desktop.</strong>
+  <strong>Run a stock Ubuntu MATE desktop on Railway and connect from Windows using Remote Desktop.</strong>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Ubuntu-26.04-E95420?style=for-the-badge&logo=ubuntu&logoColor=white" alt="Ubuntu 22.04">
-  <img src="https://img.shields.io/badge/XFCE-Desktop-2284F2?style=for-the-badge&logo=xfce&logoColor=white" alt="XFCE">
+  <img src="https://img.shields.io/badge/Ubuntu-24.04.5%20LTS-E95420?style=for-the-badge&logo=ubuntu&logoColor=white" alt="Ubuntu 24.04.5 LTS">
+  <img src="https://img.shields.io/badge/MATE-Desktop-2284F2?style=for-the-badge&logo=xfce&logoColor=white" alt="MATE">
   <img src="https://img.shields.io/badge/XRDP-RDP-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="XRDP">
   <img src="https://img.shields.io/badge/Railway-Deploy-0B0D0E?style=for-the-badge&logo=railway&logoColor=white" alt="Railway">
+  <img src="https://img.shields.io/badge/Firefox-ESR-D47700?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox ESR">
 </p>
 
 <p align="center">
-  <em>Ubuntu 22.04 • XFCE • XRDP • Docker • Railway • Windows RDP</em>
+  <em>Ubuntu 24.04.5 LTS (Noble Numbat) • MATE • XRDP • Docker • Railway • Windows RDP</em>
 </p>
 
 ---
 
-## ✨ What Is This?
+## ✅ What Is This?
 
-This project provides a lightweight **Ubuntu 22.04 graphical desktop** running inside a Docker container.
+This project provides a **stock Ubuntu 24.04.5 LTS (Noble Numbat) MATE desktop** running inside a Docker container — the same wallpaper, apps and features you get when Ubuntu MATE is installed normally on a PC.
 
 It uses:
 
-- 🐧 **Ubuntu 22.04** — Linux base system
-- 🖥️ **XFCE** — lightweight graphical desktop
+- 🐧 **Ubuntu 24.04.5 LTS (Noble)** — Linux base system (latest point release)
+- 🖥️ **MATE** — lightweight desktop with the standard Ubuntu MATE wallpaper, panel and default apps
+- 🦊 **Firefox ESR** — real browser that actually works inside a container (see below)
 - 🔐 **XRDP** — Remote Desktop Protocol server
 - 🐳 **Docker** — containerized environment
 - 🚂 **Railway** — cloud deployment
-- 🪟 **Windows Remote Desktop** — connect from Windows 10
+- 🪟 **Windows Remote Desktop** — connect with the built-in `mstsc`
 
-Once deployed, you can connect to the Ubuntu desktop from Windows using the built-in **Remote Desktop Connection** application.
+Every package in the image is **fully updated & upgraded** (security updates included) at build time.
 
-No Ubuntu installation is required on your Windows computer.
+### 🔑 Default RDP Login
+
+| | |
+|---|---|
+| **Username** | `ubuntu` |
+| **Password** | `1122` |
+
+(You can change the password at runtime with the `RDP_PASSWORD` variable — see [RDP Login Information](#-rdp-login-information).)
+
+---
+
+## 📸 Verified — Real RDP Login
+
+The screenshots below were captured from a **real RDP client** (`xfreerdp`, the same protocol Windows `mstsc` uses) connecting to a system built with exactly this setup, logging in with `ubuntu` / `1122`.
+
+### 1. Terminal with system information (inside the live RDP session)
+
+Note the `Pending upgrades: 0` line — everything is fully updated & upgraded.
+
+<p align="center">
+  <img src="docs/screenshot-1-system-info.png" alt="System info terminal in RDP session">
+</p>
+
+### 2. The desktop, right after a normal RDP login
+
+The stock Ubuntu MATE (Noble Numbat) wallpaper, panel, apps and features.
+
+<p align="center">
+  <img src="docs/screenshot-2-desktop.png" alt="Ubuntu MATE desktop after RDP login">
+</p>
+
+### 3. Bonus: the browser works (this was the bug, now fixed)
+
+Firefox ESR opens and loads web pages — no more *"Failed to execute default Web Browser"* error.
+
+<p align="center">
+  <img src="docs/screenshot-3-browser.png" alt="Firefox ESR inside the RDP session">
+</p>
+
+---
+
+## 🔧 The Browser Error — Fixed
+
+If a container image ships Ubuntu's **snap-based Firefox**, the browser can never start inside Docker/Railway (snap needs systemd, which containers don't have). The result is exactly this error the moment you try to open a web app or link:
+
+> **Failed to execute default Web Browser. Input/output error.**
+
+**Fix in this image:** the official **Mozilla Firefox ESR** build is installed to `/opt/firefox` and registered as the system default browser (`x-www-browser` alternative + MIME defaults). Clicking any link, the menu's *Web Browser* entry, or any app that opens a URL now launches Firefox ESR correctly.
 
 ---
 
@@ -59,13 +108,13 @@ No Ubuntu installation is required on your Windows computer.
 ┌────────────────────────────────┐
 │       Railway Container        │
 │                                │
-│        Ubuntu 22.04            │
+│   Ubuntu 24.04.5 LTS (MATE)    │
 │              │                 │
-│          XRDP :3389             │
+│          XRDP :3389            │
 │              │                 │
-│            XFCE                │
+│            MATE                │
 │              │                 │
-│       Ubuntu Desktop           │
+│   Ubuntu Desktop + Firefox ESR │
 └────────────────────────────────┘
 ```
 
@@ -73,44 +122,39 @@ No Ubuntu installation is required on your Windows computer.
 
 ## 📦 Project Structure
 
-Your GitHub repository should contain:
-
 ```text
-ubuntu-rdp/
+ubuntu-lite-xrdp/
 ├── Dockerfile
 ├── start.sh
-└── README.md
+├── README.md
+└── docs/
+    ├── screenshot-1-system-info.png
+    ├── screenshot-2-desktop.png
+    └── screenshot-3-browser.png
 ```
 
 ### `Dockerfile`
 
-The `Dockerfile` builds the Ubuntu environment and installs:
+Builds the Ubuntu 24.04 LTS environment and installs:
 
-- XFCE
-- XFCE utilities
-- XRDP
-- Xorg
-- D-Bus
-- Sudo
-- Required utilities
+- MATE desktop (stock Ubuntu MATE set: default wallpaper, panel, apps)
+- XRDP + Xorg (with `xorgxrdp`)
+- Real Firefox ESR browser (set as the default web browser)
+- D-Bus, Sudo, curl, openssl and required utilities
+- Fully upgrades everything (security updates included)
 
 ### `start.sh`
 
-The `start.sh` script runs when the container starts.
+Runs when the container starts. It:
 
-It:
-
-- Reads the RDP password from Railway.
-- Sets the password for `railwayuser`.
-- Starts D-Bus.
-- Starts `xrdp-sesman`.
-- Starts XRDP on port `3389`.
+- Sets the password for `ubuntu` (default `1122`, or the `RDP_PASSWORD` variable)
+- Starts D-Bus
+- Starts `xrdp-sesman`
+- Starts XRDP on port `3389`
 
 ---
 
 ## 🚀 Beginner Setup Guide
-
-Don't worry if you have never used Docker, Railway, or XRDP before.
 
 Follow the steps below in order.
 
@@ -118,97 +162,60 @@ Follow the steps below in order.
 
 ### 1️⃣ Create a GitHub Repository
 
-Go to GitHub and create a new repository.
-
-Recommended name:
-
-```text
-ubuntu-rdp
-```
-
-You can make the repository:
-
-- 🔒 **Private** — recommended
-- 🌎 **Public** — if you want to share the project
-
-Your repository should eventually contain:
+Create a new repository (for example named `ubuntu-lite-xrdp`) and upload:
 
 ```text
 Dockerfile
 start.sh
 README.md
-```
-
-> ⚠️ Never put your real password inside the GitHub repository.
-
----
-
-### 2️⃣ Upload the Project Files
-
-Upload these three files:
-
-```text
-Dockerfile
-start.sh
-README.md
-```
-
-The repository should look like:
-
-```text
-ubuntu-rdp/
-├── Dockerfile
-├── start.sh
-└── README.md
+docs/ (optional - screenshots)
 ```
 
 ---
 
-### 3️⃣ Create a Railway Account
+### 2️⃣ Create a Railway Project
 
-Create an account on Railway.
+Create a Railway account, then create a new project from your GitHub repository.
 
-After logging in, create a new project.
+Railway detects the `Dockerfile` automatically. You do **not** need to install anything on your computer.
 
-Choose the option to deploy from your GitHub repository.
+---
 
-Select:
+### 3️⃣ Set the Service Disk Size (important!)
+
+The MATE image with all standard apps is large (≈ **4.8 GB** installed).
+
+Go to your Railway service:
 
 ```text
-ubuntu-rdp
+Settings
+   ↓
+Services
+   ↓
+Disk size
 ```
 
-Railway will detect the `Dockerfile` automatically.
-
-You do not need to manually install Ubuntu, Docker, XFCE, or XRDP on your computer.
+Set the disk to **6 GB or more**, otherwise the build/run will fail with not-enough-space errors.
 
 ---
 
 ### 4️⃣ Wait for Railway to Build
 
-Railway will read the `Dockerfile` and build the container.
-
-The first build may take several minutes because XFCE and XRDP need to be installed.
+The first build takes several minutes (MATE + all default apps + Firefox ESR).
 
 Wait until the deployment finishes successfully.
 
-You should see your service running.
-
 ---
 
-### 🔐 5️⃣ Set Your RDP Password
+### 🔐 5️⃣ (Optional) Change the RDP Password
 
-This is one of the most important steps.
-
-Open your Railway project.
-
-Go to your service and find:
+The default password is `1122`. If you want a different one, open your Railway service:
 
 ```text
 Variables
 ```
 
-Create a new environment variable.
+Create a new environment variable:
 
 #### Variable name
 
@@ -218,21 +225,13 @@ RDP_PASSWORD
 
 #### Variable value
 
-Choose your own strong password.
-
-For example:
-
 ```text
-MyUbuntu!Desktop_7284
+MyNewPassword!927
 ```
 
-So your Railway variable should look like:
+Then restart/redeploy the service so the container picks up the variable. The username stays `ubuntu`.
 
-```env
-RDP_PASSWORD=MyUbuntu!Desktop_7284
-```
-
-> 🔒 The password above is only an example. Create your own password.
+> ⚠️ If the RDP endpoint is public, a strong password is strongly recommended — internet scanners test default credentials continuously.
 
 ---
 
@@ -241,80 +240,31 @@ RDP_PASSWORD=MyUbuntu!Desktop_7284
 Your RDP username is:
 
 ```text
-railwayuser
+ubuntu
 ```
 
-Your RDP password is whatever you entered as:
+Your RDP password is:
 
 ```text
-RDP_PASSWORD
+1122
 ```
+
+(default — unless you set `RDP_PASSWORD` in Railway Variables)
 
 For example:
 
 ```text
-Username: railwayuser
-Password: MyUbuntu!Desktop_7284
+Username: ubuntu
+Password: 1122
 ```
 
 ---
 
-## 💡 Why Use a Railway Variable?
-
-The password should not be written directly into the:
-
-```text
-Dockerfile
-```
-
-or:
-
-```text
-start.sh
-```
-
-and should never be committed to GitHub.
-
-Instead:
-
-```text
-Railway Variable
-       │
-       │ RDP_PASSWORD
-       ▼
-   Container
-       │
-       ▼
-railwayuser password
-```
-
-This keeps your password out of the source code.
-
----
-
-### 🔄 6️⃣ Redeploy After Adding the Password
-
-After adding:
-
-```text
-RDP_PASSWORD
-```
-
-Railway may automatically redeploy your service.
-
-If it does not, restart or redeploy the service manually.
-
-The container needs to restart so that it receives the new variable.
-
----
-
-### 🌐 7️⃣ Configure Railway TCP Proxy
+### 🌐 6️⃣ Configure Railway TCP Proxy
 
 This step is required.
 
-RDP uses TCP, while a normal Railway public domain is intended for web traffic.
-
-Your container listens for RDP on:
+RDP uses TCP, while a normal Railway public domain is intended for web traffic. Your container listens for RDP on:
 
 ```text
 3389
@@ -346,11 +296,9 @@ Railway may provide an address similar to:
 https://your-project.up.railway.app
 ```
 
-❌ Do not use this for Windows Remote Desktop.
+❌ Do **not** use this for Windows Remote Desktop.
 
-You need the TCP Proxy address.
-
-Railway will provide something similar to:
+You need the **TCP Proxy** address:
 
 ```text
 something.proxy.rlwy.net:12345
@@ -360,11 +308,9 @@ something.proxy.rlwy.net:12345
 
 ---
 
-### 📡 8️⃣ Find Your TCP Proxy Address
+### 📡 7️⃣ Find Your TCP Proxy Address
 
-After creating the TCP Proxy, Railway will show you the public TCP hostname and port.
-
-For example:
+After creating the TCP Proxy, Railway shows the public hostname and port:
 
 ```text
 Hostname:
@@ -374,23 +320,15 @@ Port:
 18472
 ```
 
-Your actual values will be different.
-
-Combine them like this:
+Combine them:
 
 ```text
 abc123.proxy.rlwy.net:18472
 ```
 
-Keep this address available.
-
-You will enter it into Windows Remote Desktop.
-
 ---
 
-### 🪟 9️⃣ Connect From Windows 10
-
-On your Windows 10 computer:
+### 🪟 8️⃣ Connect From Windows
 
 Press:
 
@@ -398,431 +336,157 @@ Press:
 Windows Key + R
 ```
 
-A small Run window will appear.
-
 Type:
 
 ```powershell
 mstsc
 ```
 
-Then press:
-
-```text
-Enter
-```
-
-Windows will open:
-
-```text
-Remote Desktop Connection
-```
-
----
-
-### 🖥️ 🔟 Enter the Railway RDP Address
-
-Find the:
-
-```text
-Computer:
-```
-
-field.
-
-Enter your Railway TCP Proxy address.
-
-For example:
+Press **Enter**, then in the **Computer** field enter your Railway TCP address:
 
 ```text
 abc123.proxy.rlwy.net:18472
 ```
 
-Then click:
+Click **Connect**, then use:
 
 ```text
-Connect
+Username: ubuntu
+Password: 1122
 ```
+
+🎉 The Ubuntu MATE desktop opens.
 
 ---
 
-### 🔑 1️⃣1️⃣ Enter Your Credentials
-
-Windows will ask for your login credentials.
-
-Use:
-
-```text
-Username
-railwayuser
-
-Password
-```
-
-Use the password you created in Railway:
-
-```text
-MyUbuntu!Desktop_7284
-```
-
-For example:
-
-```text
-Username: railwayuser
-Password: MyUbuntu!Desktop_7284
-```
-
----
-
-### 🎉 1️⃣2️⃣ Ubuntu Desktop
-
-If everything is configured correctly, Windows Remote Desktop should open your Ubuntu XFCE desktop.
-
-You should now have:
-
-```text
-Windows 10
-     │
-     │ RDP
-     ▼
-Railway
-     │
-     ▼
-Ubuntu 22.04
-     │
-     ▼
-XFCE Desktop
-```
-
-🎉 You are now remotely connected to Ubuntu.
-
----
-
-## 🔍 Check Railway Logs
-
-If you want to verify that XRDP started correctly, open:
-
-```text
-Railway
-   ↓
-Your Service
-   ↓
-Deployments
-   ↓
-Logs
-```
-
-You should see messages similar to:
-
-```text
-Ubuntu XFCE + XRDP
-User: railwayuser
-Setting RDP password...
-Starting XRDP session manager...
-Starting XRDP server on port 3389...
-```
-
-The exact formatting may be different.
-
-The important part is that XRDP starts successfully.
-
----
-
-## 🛠️ Troubleshooting
-
-### ❌ RDP Cannot Connect
-
-Check these items in order.
-
-#### 1. Is the Railway service running?
-
-Make sure the deployment completed successfully.
-
-#### 2. Is TCP Proxy enabled?
-
-Make sure you created a TCP Proxy pointing to:
-
-```text
-3389
-```
-
-#### 3. Are you using the TCP address?
-
-Correct:
-
-```text
-abc123.proxy.rlwy.net:18472
-```
-
-Incorrect:
-
-```text
-https://abc123.up.railway.app
-```
-
-#### 4. Are you using the correct port?
-
-Railway may give you an external port such as:
-
-```text
-18472
-```
-
-Use:
-
-```text
-hostname:18472
-```
-
-Do not automatically assume the public port is `3389`.
-
----
-
-### ❌ Login Failed
-
-Your username should be exactly:
-
-```text
-railwayuser
-```
-
-Your password should be the current value of:
-
-```text
-RDP_PASSWORD
-```
-
-in Railway Variables.
-
-Make sure you did not accidentally create:
-
-```text
-PASSWORD
-```
-
-or:
-
-```text
-RDP_PASS
-```
-
-The variable must be:
-
-```text
-RDP_PASSWORD
-```
-
----
-
-### ❌ Black Screen After Login
-
-If RDP connects but you get a black screen or are immediately disconnected:
-
-- Check Railway logs.
-- Confirm XFCE installed successfully.
-- Confirm XRDP started successfully.
-- Restart or redeploy the Railway service.
-
-The project configures XFCE as the XRDP desktop session.
-
----
-
-### ❌ Password Doesn't Work
-
-Go to:
-
-```text
-Railway
-   ↓
-Your Service
-   ↓
-Variables
-```
-
-Check:
-
-```text
-RDP_PASSWORD
-```
-
-For example:
-
-```env
-RDP_PASSWORD=MyNewPassword!927
-```
-
-Then restart or redeploy the service.
-
-Use:
-
-```text
-Username: railwayuser
-Password: MyNewPassword!927
-```
-
----
-
-## 🔐 Security
-
-### Use a Strong Password
-
-A public RDP endpoint can be discovered by automated internet scanners.
-
-Do not use passwords such as:
-
-```text
-123456
-password
-admin
-ubuntu
-RailwayPassword123
-```
-
-Use a strong password containing:
-
-- ✅ Uppercase letters
-- ✅ Lowercase letters
-- ✅ Numbers
-- ✅ Special characters
-- ✅ 12+ characters
-
-Example:
-
-```text
-MyUbuntu!Desktop_7284
-```
-
-This is an example only. Do not use the example password.
-
----
-
-### 🚫 Never Commit Secrets
-
-Never put these in GitHub:
-
-- ❌ Real RDP password
-- ❌ API keys
-- ❌ SSH private keys
-- ❌ Access tokens
-- ❌ Other secrets
-
-Your RDP password belongs in the Railway environment variable:
-
-```text
-RDP_PASSWORD
-```
+## 🛠️ What Was Disabled (and why)
+
+A few standard components cannot work inside a container and would otherwise crash on login and show *"Mate has experienced an internal error"*. They are disabled in the image (everything else is stock):
+
+| Component | Why disabled in a container |
+|---|---|
+| `mate-power-manager` | no power/battery hardware exists in a container |
+| `ayatana-indicator-power` | the panel's power icon (needs the power manager) |
+| `ayatana-indicator-printers` + `print-applet` | no CUPS printing service is needed/available |
+| `update-notifier` | apt updates happen at image build time, not inside the running container |
 
 ---
 
 ## 💾 Important: Container Storage
 
-This project runs Ubuntu inside a Railway container.
+A container is not a VPS. It may be restarted, redeployed, or replaced.
 
-A container is not the same thing as a traditional VPS.
+Do **not** assume files saved inside the container survive a redeployment. If you need permanent data, configure persistent storage separately.
 
-The container may be restarted, redeployed, or replaced.
-
-Therefore, do not assume that files saved inside the container will always survive a redeployment.
-
-If you need permanent files or data, configure appropriate persistent storage separately.
+(Password change survives redeploys because `start.sh` re-applies it from the `RDP_PASSWORD` variable / default on every boot.)
 
 ---
 
-## 👤 RDP User
+## 🔗 Want Ubuntu 26.04 LTS?
 
-The default RDP username is:
+MATE is packaged for 26.04 (Resolute). To use the latest LTS instead, change the first line of the `Dockerfile`:
 
-```text
-railwayuser
+```dockerfile
+FROM ubuntu:26.04
 ```
 
-For a beginner setup, it is recommended to leave the username unchanged.
-
-The password can be changed at any time through:
-
-```text
-Railway → Variables → RDP_PASSWORD
-```
+Everything else works the same way. (24.04.5 LTS was kept as the default because it is the longest-supported, battle-tested choice.)
 
 ---
 
 ## 📋 Complete Setup Checklist
 
-Use this checklist if you are doing the setup for the first time.
-
-- [ ] Create GitHub account
-- [ ] Create GitHub repository
-- [ ] Upload `Dockerfile`
-- [ ] Upload `start.sh`
-- [ ] Upload `README.md`
-
-- [ ] Create Railway account
-- [ ] Create Railway project
-- [ ] Connect GitHub repository
-- [ ] Deploy the project
-- [ ] Wait for Docker build
-- [ ] Confirm deployment succeeds
-
-- [ ] Open Railway Variables
-- [ ] Create `RDP_PASSWORD`
-- [ ] Set a strong password
-- [ ] Save the variable
-- [ ] Restart/redeploy if necessary
-
-- [ ] Open Railway Settings
-- [ ] Open Networking
-- [ ] Create TCP Proxy
-- [ ] Set internal port to `3389`
-
-- [ ] Copy Railway TCP hostname
-- [ ] Copy Railway TCP external port
-
-- [ ] Open Windows 10
-- [ ] Press `Windows + R`
-- [ ] Run `mstsc`
-- [ ] Enter Railway TCP `hostname:port`
-- [ ] Click Connect
-
-- [ ] Username = `railwayuser`
-- [ ] Password = your `RDP_PASSWORD`
-
-- [ ] Ubuntu XFCE desktop appears
+- [ ] GitHub repository with `Dockerfile`, `start.sh`, `README.md`
+- [ ] Railway project connected to the repository
+- [ ] Service **Disk size ≥ 6 GB**
+- [ ] Build finished successfully
+- [ ] (Optional) `RDP_PASSWORD` variable set + redeploy
+- [ ] TCP Proxy created for internal port `3389`
+- [ ] Copy TCP `hostname:port`
+- [ ] Windows: `Win + R` → `mstsc`
+- [ ] Enter `hostname:port` → Connect
+- [ ] Username `ubuntu` / Password `1122` (or your `RDP_PASSWORD`)
+- [ ] Ubuntu MATE desktop appears 🎉
 
 ---
 
-## 🔗 Final Connection Example
+## 📌 Quick Reference
 
-Suppose Railway gives you:
+| Setting | Value |
+|---|---|
+| 🐧 OS | Ubuntu 24.04.5 LTS (Noble Numbat) |
+| 🖥️ Desktop | MATE (stock Ubuntu MATE look) |
+| 🦊 Browser | Firefox ESR (container-compatible, default) |
+| 🔐 Remote Protocol | XRDP / RDP |
+| 🔌 Container Port | 3389 |
+| 👤 Username | `ubuntu` |
+| 🔑 Password | `1122` (default; override with `RDP_PASSWORD`) |
+| ☁️ Hosting | Railway (TCP Proxy → 3389) |
+| 💾 Disk | ≥ 6 GB |
+| 🪟 Client | Windows Remote Desktop (`mstsc`) |
 
-```text
-TCP Host:
-abc123.proxy.rlwy.net
+---
 
-TCP Port:
-18472
-```
-
-Windows Remote Desktop should use:
-
-```text
-abc123.proxy.rlwy.net:18472
-```
-
-Then:
-
-```text
-Username:
-railwayuser
-```
-
-and:
+## 🚀 Quick Start (short version)
 
 ```text
-Password:
-your RDP_PASSWORD
+1. Push this project to GitHub
+          ↓
+2. Deploy on Railway  (disk size ≥ 6 GB)
+          ↓
+3. (Optional) add Railway variable RDP_PASSWORD=...
+          ↓
+4. Create Railway TCP Proxy → 3389
+          ↓
+5. Copy Railway TCP hostname:port
+          ↓
+6. mstsc → hostname:port
+          ↓
+7. Username: ubuntu   Password: 1122
+          ↓
+8. Enjoy Ubuntu MATE 🎉
 ```
 
-> ⚠️ `abc123.proxy.rlwy.net:18472` is only an example. Use the actual address provided by your Railway project.
+---
+
+## 🛠️ Troubleshooting
+
+### ❌ "Failed to execute default Web Browser" / browser won't open
+
+Fixed in this image — Firefox ESR is installed and set as the default browser.
+If you see it again, confirm the deployment is running the **new** image (redeploy).
+
+### ❌ RDP Cannot Connect
+
+1. Is the service running? (deployment succeeded)
+2. Is the **TCP Proxy** enabled for port `3389`?
+3. Are you using the TCP address (`hostname:port`), **not** the `https://...up.railway.app` domain?
+4. Did you use the **external** port from Railway (it may not be 3389)?
+
+### ❌ Login Failed
+
+- Username must be exactly: `ubuntu`
+- Password must be `1122`, or the current value of `RDP_PASSWORD`
+- If you changed `RDP_PASSWORD`, did you **redeploy** the service?
+- Make sure the variable is named exactly `RDP_PASSWORD` (not `PASSWORD` or `RDP_PASS`)
+
+### ❌ Black Screen After Login
+
+- Check Railway logs — you should see `Starting XRDP session manager...` and `Starting XRDP server on port 3389...`
+- Confirm the service has enough **disk** (≥ 6 GB) and the deployment didn't fail
+- Restart / redeploy the service
+
+### ❌ Build Fails with "no space left on device"
+
+Increase the service **Disk size** (≥ 6 GB) and redeploy.
+
+---
+
+## 🔐 Security Notes
+
+- The default password `1122` is intentionally simple for easy setup.
+- If this endpoint is reachable from the internet, set your own strong `RDP_PASSWORD` (uppercase + lowercase + numbers + symbols, 12+ characters).
+- Never commit real secrets to GitHub. The password belongs in a Railway variable.
 
 ---
 
@@ -831,94 +495,34 @@ your RDP_PASSWORD
 ```text
                          INTERNET
                             │
-                            │
                             ▼
                   ┌──────────────────┐
-                  │    Windows 10    │
-                  │                  │
-                  │ Remote Desktop   │
-                  │      (mstsc)     │
+                  │      Windows     │
+                  │    (mstsc)       │
                   └────────┬─────────┘
-                           │
                            │ RDP / TCP
                            ▼
                   ┌──────────────────┐
                   │ Railway TCP Proxy│
-                  │                  │
                   │ hostname : port  │
                   └────────┬─────────┘
-                           │
                            │ TCP
                            ▼
-        ┌───────────────────────────────────┐
-        │        Railway Container          │
-        │                                   │
-        │          Ubuntu 22.04             │
-        │                │                  │
-        │           XRDP :3389              │
-        │                │                  │
-        │              XFCE                 │
-        │                │                  │
-        │        Ubuntu Desktop             │
-        └───────────────────────────────────┘
+        ┌────────────────────────────────────┐
+        │          Railway Container         │
+        │                                    │
+        │   Ubuntu 24.04.5 LTS (MATE)        │
+        │            │                       │
+        │       XRDP :3389                   │
+        │            │                       │
+        │  MATE Desktop + Firefox ESR        │
+        │  (all packages updated & upgraded) │
+        └────────────────────────────────────┘
 ```
-
----
-
-## 📌 Quick Reference
-
-| Setting | Value |
-|---|---|
-| 🐧 OS | Ubuntu 22.04 |
-| 🖥️ Desktop | XFCE |
-| 🔐 Remote Protocol | XRDP / RDP |
-| 🔌 Container Port | 3389 |
-| 👤 Username | railwayuser |
-| 🔑 Password Variable | RDP_PASSWORD |
-| ☁️ Hosting | Railway |
-| 🪟 Client | Windows Remote Desktop |
-| 🛜 Public Access | Railway TCP Proxy |
-
----
-
-## 🚀 Quick Start
-
-If you already understand the setup, the entire process is:
-
-```text
-1. Push this project to GitHub
-          ↓
-2. Deploy the GitHub repository on Railway
-          ↓
-3. Add Railway Variable:
-   RDP_PASSWORD=your-strong-password
-          ↓
-4. Create Railway TCP Proxy → 3389
-          ↓
-5. Copy Railway TCP hostname:port
-          ↓
-6. Open mstsc on Windows 10
-          ↓
-7. Enter hostname:port
-          ↓
-8. Username: railwayuser
-          ↓
-9. Enter your RDP_PASSWORD
-          ↓
-10. Enjoy Ubuntu XFCE 🎉
-```
-
----
-
-## ⭐ Notes
-
-This project is intended as a simple way to run an Ubuntu graphical desktop in a Railway container and access it remotely using RDP.
-
-For production or sensitive workloads, consider additional security controls rather than exposing RDP directly to the public internet.
 
 ---
 
 <p align="center">
-  <strong>🖥️ Ubuntu + XFCE + XRDP + Railway</strong><br>
-  <sub>Simple remote Ubuntu desktop over RDP.</sub>
+  <strong>🖥️ Ubuntu MATE + XRDP + Railway</strong><br>
+  <sub>A stock Ubuntu MATE desktop over RDP — verified with real RDP login.</sub>
 </p>

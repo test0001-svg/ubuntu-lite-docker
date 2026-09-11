@@ -26,36 +26,26 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Create RDP user
-RUN useradd -m -s /bin/bash railwayuser && \
-    usermod -aG sudo railwayuser
+# Set root password
+RUN echo "Ubuntu:1122" | chpasswd
 
-# Configure Xorg/XRDP
-RUN sed -i 's/allowed_users=console/allowed_users=anybody/' /etc/X11/Xwrapper.config
+RUN sed -i 's/^allowed_users=.*/allowed_users=anybody/' /etc/X11/Xwrapper.config || echo "allowed_users=anybody" >> /etc/X11/Xwrapper.config
 
-# Configure XFCE session for the RDP user
-RUN echo "startxfce4" > /home/railwayuser/.xsession && \
-    chown railwayuser:railwayuser /home/railwayuser/.xsession && \
-    chmod 644 /home/railwayuser/.xsession
+RUN echo "startxfce4" > /root/.xsession && chmod 700 /root/.xsession
 
-# Configure XRDP to start XFCE
-RUN cat > /etc/xrdp/startwm.sh <<'EOF'
-#!/bin/sh
 
-unset DBUS_SESSION_BUS_ADDRESS
-unset XDG_RUNTIME_DIR
+# Generate machine-id for dbus
+RUN mkdir -p /var/run/dbus && dbus-uuidgen > /var/lib/dbus/machine-id
 
-exec startxfce4
-EOF
+RUN sed -i 's/crypt_level=high/crypt_level=low/' /etc/xrdp/xrdp.ini && \
+    sed -i 's/security_layer=negotiate/security_layer=rdp/' /etc/xrdp/xrdp.ini && \
+    echo "exec startxfce4" > /etc/xrdp/startwm.sh && chmod +x /etc/xrdp/startwm.sh
 
-RUN chmod +x /etc/xrdp/startwm.sh
+RUN adduser xrdp ssl-cert
 
-# Create startup script
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
-# XRDP internal port
 EXPOSE 3389
 
-# Start XRDP
 CMD ["/start.sh"]

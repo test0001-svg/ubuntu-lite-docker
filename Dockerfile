@@ -2,8 +2,11 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+RUN dpkg --add-architecture i386
+
 # Install XFCE desktop, XRDP, Xorg and required utilities
 RUN apt-get update && apt-get install -y \
+    xrdp \
     xfce4 \
     xfce4-goodies \
     xorg \
@@ -11,6 +14,15 @@ RUN apt-get update && apt-get install -y \
     dbus-x11 \
     sudo \
     curl \
+    wget \
+    nano \
+    net-tools \
+    policykit-1 \
+    pulseaudio \
+    pulseaudio-utils \
+    wine \
+    wine32 \
+    firefox-esr && \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 

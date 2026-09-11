@@ -25,7 +25,7 @@ This project provides a **stock Ubuntu 24.04.5 LTS (Noble Numbat) MATE desktop**
 It uses:
 
 - 🐧 **Ubuntu 24.04.5 LTS (Noble)** — Linux base system (latest point release)
-- 🖥️ **MATE** — lightweight desktop with the standard Ubuntu MATE wallpaper, panel and default apps
+- 🖥️ **MATE** — lightweight desktop with the stock Ubuntu MATE apps, default panel and the **dark theme** (Yaru-MATE-dark + dark Numbat wallpaper)
 - 🦊 **Firefox ESR** — real browser that actually works inside a container (see below)
 - 🔐 **XRDP** — Remote Desktop Protocol server
 - 🐳 **Docker** — containerized environment
@@ -59,7 +59,7 @@ Note the `Pending upgrades: 0` line — everything is fully updated & upgraded.
 
 ### 2. The desktop, right after a normal RDP login
 
-The stock Ubuntu MATE (Noble Numbat) wallpaper, panel, apps and features.
+The stock Ubuntu MATE (Noble Numbat) dark wallpaper, dark panel (Yaru-MATE-dark) and all default apps.
 
 <p align="center">
   <img src="docs/screenshot-2-desktop.png" alt="Ubuntu MATE desktop after RDP login">
@@ -82,6 +82,25 @@ If a container image ships Ubuntu's **snap-based Firefox**, the browser can neve
 > **Failed to execute default Web Browser. Input/output error.**
 
 **Fix in this image:** the official **Mozilla Firefox ESR** build is installed to `/opt/firefox` and registered as the system default browser (`x-www-browser` alternative + MIME defaults). Clicking any link, the menu's *Web Browser* entry, or any app that opens a URL now launches Firefox ESR correctly.
+
+---
+
+## 🌙 Dark Theme (pre-configured)
+
+The image ships with the **Yaru-MATE-dark** theme and the **dark stock Numbat wallpaper** — set at build time in the user's dconf database, so every login is dark by default:
+
+- Window/panel theme: `Yaru-MATE-dark`
+- Icon theme: `Yaru-MATE-dark`
+- Color scheme: prefer dark (terminal, menus and dialogs are dark)
+- Wallpaper: `numbat_wallpaper_dark` (the dark version of the stock Noble Numbat wallpaper)
+
+Want the light theme instead? Inside the session, open a terminal and run:
+
+```bash
+gsettings set org.mate.interface gtk-theme "Yaru-MATE-light"
+gsettings set org.mate.interface icon-theme "Yaru-MATE-light"
+gsettings set org.mate.background picture-filename /usr/share/backgrounds/ubuntu-mate-noble/numbat_wallpaper_green_3480x2160.jpg
+```
 
 ---
 
@@ -126,6 +145,7 @@ If a container image ships Ubuntu's **snap-based Firefox**, the browser can neve
 ubuntu-lite-xrdp/
 ├── Dockerfile
 ├── start.sh
+├── connect.rdp        ← ready-made RDP file (username pre-filled)
 ├── README.md
 └── docs/
     ├── screenshot-1-system-info.png
@@ -258,6 +278,32 @@ Username: ubuntu
 Password: 1122
 ```
 
+### 📌 Username is pre-filled — you only type the password
+
+This repo includes **`connect.rdp`**, a ready-made Windows RDP file with the username already set:
+
+```text
+full address:s:REPLACE_WITH_RAILWAY_TCP_ADDRESS
+username:s:ubuntu
+```
+
+So at login you do **not** need to type the username — only the password.
+
+**How to use it:**
+
+1. Download `connect.rdp` from this repo
+2. Open it with a text editor (Notepad)
+3. Replace `REPLACE_WITH_RAILWAY_TCP_ADDRESS` with your Railway TCP address, e.g.:
+
+```text
+full address:s:abc123.proxy.rlwy.net:18472
+```
+
+4. Save the file and **double-click** it (it opens in Windows Remote Desktop with `ubuntu` already filled in)
+5. Press **Connect** and type only the password: `1122`
+
+> 💡 Even if you connect normally with `mstsc`, Windows can remember the username for you: on the first login window tick **“Remember my username”** — from the next time only the password is needed.
+
 ---
 
 ### 🌐 6️⃣ Configure Railway TCP Proxy
@@ -330,6 +376,10 @@ abc123.proxy.rlwy.net:18472
 
 ### 🪟 8️⃣ Connect From Windows
 
+**Easiest way (username pre-filled):** use the `connect.rdp` file from this repo — see [RDP Login Information](#-rdp-login-information). Just replace the address line and double-click it.
+
+**Manual way:**
+
 Press:
 
 ```text
@@ -351,7 +401,7 @@ abc123.proxy.rlwy.net:18472
 Click **Connect**, then use:
 
 ```text
-Username: ubuntu
+Username: ubuntu   (tick "Remember my username" to never type it again)
 Password: 1122
 ```
 
@@ -415,8 +465,10 @@ Everything else works the same way. (24.04.5 LTS was kept as the default because
 | Setting | Value |
 |---|---|
 | 🐧 OS | Ubuntu 24.04.5 LTS (Noble Numbat) |
-| 🖥️ Desktop | MATE (stock Ubuntu MATE look) |
+| 🖥️ Desktop | MATE (stock apps, dark theme) |
+| 🌙 Theme | Yaru-MATE-dark + dark Numbat wallpaper |
 | 🦊 Browser | Firefox ESR (container-compatible, default) |
+| 📌 RDP file | `connect.rdp` (username pre-filled) |
 | 🔐 Remote Protocol | XRDP / RDP |
 | 🔌 Container Port | 3389 |
 | 👤 Username | `ubuntu` |

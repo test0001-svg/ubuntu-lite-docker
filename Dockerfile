@@ -63,6 +63,22 @@ RUN echo 'mate-session' > /home/ubuntu/.xsession \
     && chown -R ubuntu:ubuntu /home/ubuntu/.config
 
 # ---------------------------------------------------------------------------
+# 4b) Dark theme (Yaru-MATE-dark) + dark stock Numbat wallpaper.
+#     Written to the user's dconf database at build time, BEFORE the first
+#     RDP session starts (the MATE settings-daemon owns the wallpaper key
+#     once a session is running, so it must be preset).
+# ---------------------------------------------------------------------------
+RUN mkdir -p /run/user/1000 && chown ubuntu:ubuntu /run/user/1000 \
+    && runuser -u ubuntu -- env XDG_RUNTIME_DIR=/run/user/1000 dbus-run-session -- sh -c '\
+         gsettings set org.mate.interface gtk-theme "Yaru-MATE-dark" && \
+         gsettings set org.mate.interface icon-theme "Yaru-MATE-dark" && \
+         (gsettings set org.mate.interface color-scheme "prefers-dark" || true) && \
+         gsettings set org.gnome.desktop.background picture-uri "file:///usr/share/backgrounds/ubuntu-mate-noble/numbat_wallpaper_dark_3480x2160.jpg" && \
+         gsettings set org.gnome.desktop.background picture-uri-dark "file:///usr/share/backgrounds/ubuntu-mate-noble/numbat_wallpaper_dark_3480x2160.jpg" && \
+         gsettings set org.mate.background picture-filename "/usr/share/backgrounds/ubuntu-mate-noble/numbat_wallpaper_dark_3480x2160.jpg" && \
+         gsettings set org.mate.background picture-options "zoom"'
+
+# ---------------------------------------------------------------------------
 # 5) Disable components that cannot work inside a container
 #    (no power hardware, no CUPS, no update service) - they would otherwise
 #    crash on login and show "Mate has experienced an internal error".

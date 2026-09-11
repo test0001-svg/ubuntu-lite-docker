@@ -1,365 +1,318 @@
-Ubuntu XFCE + XRDP on Railway
+🖥️ Ubuntu XFCE + XRDP on Railway
+<p align="center"> <strong>Run a lightweight Ubuntu desktop on Railway and connect from Windows 10 using Remote Desktop.</strong> </p> <p align="center"> <img src="https://img.shields.io/badge/Ubuntu-22.04-E95420?style=for-the-badge&logo=ubuntu&logoColor=white" alt="Ubuntu 22.04"> <img src="https://img.shields.io/badge/XFCE-Desktop-2284F2?style=for-the-badge&logo=xfce&logoColor=white" alt="XFCE"> <img src="https://img.shields.io/badge/XRDP-RDP-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="XRDP"> <img src="https://img.shields.io/badge/Railway-Deploy-0B0D0E?style=for-the-badge&logo=railway&logoColor=white" alt="Railway"> </p> <p align="center"> <em>Ubuntu 22.04 • XFCE • XRDP • Docker • Railway • Windows RDP</em> </p>
+✨ What is this?
 
-This project runs a lightweight Ubuntu 22.04 desktop with XFCE and XRDP inside a Docker container.
+This project provides a lightweight Ubuntu 22.04 graphical desktop running inside a Docker container.
 
-You can deploy it to Railway and connect to the Ubuntu desktop from a Windows 10 computer using the built-in Remote Desktop Connection (mstsc).
+It uses:
 
-Important: This project requires Railway TCP Proxy for RDP. A normal Railway HTTP/HTTPS public domain will NOT work for RDP.
+🐧 Ubuntu 22.04 — Linux base system
+🖥️ XFCE — lightweight graphical desktop
+🔐 XRDP — Remote Desktop Protocol server
+🐳 Docker — containerized environment
+🚂 Railway — cloud deployment
+🪟 Windows Remote Desktop — connect from Windows 10
 
-1. What You Will Get
+Once deployed, you can connect to the Ubuntu desktop from Windows using the built-in:
 
-After completing this guide, the setup will look like this:
-
-Windows 10 PC
-     |
-     | Remote Desktop (RDP)
-     |
-     v
-Railway TCP Proxy
-     |
-     | TCP
-     |
-     v
-Ubuntu Docker Container
-     |
-     +-- XRDP : 3389
-     |
-     +-- XFCE Desktop
-     |
-     v
-Ubuntu Desktop
+Remote Desktop Connection
 
 
-You will be able to see an Ubuntu XFCE desktop window on your Windows 10 computer.
+No Ubuntu installation is required on your Windows computer.
 
-2. Project Files
+🎯 How it works
+┌──────────────────────┐
+│      Windows 10      │
+│                      │
+│  Remote Desktop      │
+│      (mstsc)         │
+└──────────┬───────────┘
+           │
+           │ RDP / TCP
+           ▼
+┌──────────────────────┐
+│   Railway TCP Proxy  │
+│                      │
+│ hostname : port      │
+└──────────┬───────────┘
+           │
+           │ TCP
+           ▼
+┌────────────────────────────────┐
+│       Railway Container        │
+│                                │
+│        Ubuntu 22.04            │
+│              │                 │
+│          XRDP :3389             │
+│              │                 │
+│            XFCE                │
+│              │                 │
+│       Ubuntu Desktop           │
+└────────────────────────────────┘
 
-Your GitHub repository should contain exactly these files:
-
+📦 Project Structure
 ubuntu-rdp/
 │
-├── Dockerfile
-├── start.sh
-└── README.md
+├── 📄 Dockerfile
+├── 📜 start.sh
+└── 📖 README.md
 
+Dockerfile
 
-You do NOT need to manually install Ubuntu, XFCE, or XRDP on your computer.
+Builds the complete Ubuntu environment and installs:
 
-Docker installs everything inside the Railway container.
+XFCE
+XFCE utilities
+XRDP
+Xorg
+D-Bus
+Sudo
+Required utilities
+start.sh
 
-3. What You Need
+Runs when the container starts.
 
-Before starting, you need:
+It:
 
-A GitHub account
-A Railway account
-A Windows 10 computer with Remote Desktop Connection
-An internet connection
+Reads the RDP password from Railway.
+Sets the password for railwayuser.
+Starts D-Bus.
+Starts xrdp-sesman.
+Starts XRDP on port 3389.
+🚀 Beginner Setup Guide
 
-You do not need to install Ubuntu on your Windows computer.
+Don't worry if you have never used Docker, Railway, or XRDP before.
 
-4. Create the GitHub Repository
+Follow the steps below in order.
+
+1️⃣ Create a GitHub Repository
 
 Go to GitHub and create a new repository.
 
-Give it a name such as:
+Recommended name:
 
 ubuntu-rdp
 
 
-You can make the repository public or private.
+You can make it:
 
-Recommended
+🔒 Private — recommended
+🌎 Public — if you want to share the project
 
-Use a private repository if you don't want other people to see your project files.
-
-Do NOT put your real RDP password inside the Dockerfile or README.
-
-5. Upload the Project Files
-
-Your repository needs:
+Your repository should eventually contain:
 
 Dockerfile
 start.sh
 README.md
 
 
-The Dockerfile tells Railway how to build Ubuntu.
+⚠️ Never put your real password inside the GitHub repository.
 
-The start.sh starts XRDP when the container starts.
+2️⃣ Upload the Project Files
 
-The README.md contains these instructions.
+Upload these three files:
 
-6. IMPORTANT: How the RDP Password Works
-
-The RDP username is:
-
-railwayuser
+📄 Dockerfile
+📜 start.sh
+📖 README.md
 
 
-The password is NOT permanently stored in the Dockerfile.
+The repository should look like:
 
-Instead, Railway will provide the password to the container through an environment variable.
+ubuntu-rdp
+│
+├── Dockerfile
+├── start.sh
+└── README.md
 
-The variable is called:
+3️⃣ Create a Railway Account
 
-RDP_PASSWORD
+Create an account on Railway.
 
+After logging in, create a new project.
 
-For example:
+Choose the option to deploy from your GitHub repository.
 
-RDP_PASSWORD=MyVeryStrongPassword123!
-
-
-You should choose your own strong password.
-
-7. Choose Your RDP Password
-
-For example, you could use something like:
-
-RDP_PASSWORD=BlueTiger_9274!Moon
-
-
-That is only an example.
-
-Do not use that exact password.
-
-Create your own strong password.
-
-A good password should contain:
-
-Uppercase letters
-Lowercase letters
-Numbers
-Special characters
-At least 12 characters
-
-For example, your password could look like:
-
-RDP_PASSWORD=MyUbuntu!Desktop_7284
-
-
-Again, create your own password.
-
-8. Create the Railway Project
-
-Open Railway.
-
-Create a new project.
-
-Choose the option to deploy a project/repository from GitHub.
-
-Select your GitHub repository:
+Select:
 
 ubuntu-rdp
 
 
-Railway will see the Dockerfile automatically.
+Railway will detect the Dockerfile automatically.
 
-You normally do NOT need to manually select Ubuntu or Docker.
+You do not need to manually install Ubuntu, Docker, XFCE, or XRDP on your computer.
 
-Railway will build the Docker image using the Dockerfile.
+4️⃣ Wait for Railway to Build
 
-9. Wait for the Build
+Railway will read the Dockerfile and build the container.
 
-After you deploy the repository, Railway will start building the container.
-
-The first build can take several minutes because XFCE and XRDP need to be installed.
-
-You should see build activity in the Railway dashboard.
+The first build may take several minutes because XFCE and XRDP need to be installed.
 
 Wait until the deployment finishes successfully.
 
-10. Set the RDP Password in Railway
+You should see the service running.
 
-This is one of the most important steps.
+🔐 5️⃣ Set Your RDP Password
+
+This is the most important configuration step.
 
 Open your Railway project.
 
-Select your service.
-
-Find:
+Go to your service and find:
 
 Variables
 
 
-or the environment variables section.
+Create a new environment variable.
 
-Create a new variable.
-
-Set the variable name to:
-
+Variable name
 RDP_PASSWORD
 
+Variable value
 
-Set the value to your chosen password.
+Choose your own strong password.
 
 For example:
 
-RDP_PASSWORD=MyUbuntu!Desktop_7284
-
-
-The important part is:
-
-Name:
-RDP_PASSWORD
-
-Value:
 MyUbuntu!Desktop_7284
 
 
-Do NOT put:
+So Railway should contain:
 
-RDP_PASSWORD=RDP_PASSWORD=MyUbuntu...
+RDP_PASSWORD = MyUbuntu!Desktop_7284
 
 
-There should only be one variable name and one value.
+🔒 The example password above is only an example. Create your own password.
 
-11. Save the Railway Variable
+🔑 RDP Login Information
 
-After adding the variable, save/apply the change.
-
-Railway may automatically redeploy the service.
-
-If it asks you to redeploy, allow it to redeploy.
-
-The container needs to restart so that it receives the new password.
-
-12. RDP Username
-
-The username is always:
+Your RDP username is:
 
 railwayuser
 
 
-The username is created automatically by the Dockerfile.
+Your RDP password is whatever you entered as:
 
-You do not need to create it manually in Railway.
+RDP_PASSWORD
 
-13. RDP Internal Port
 
-XRDP listens inside the container on:
+For example:
+
+Username: railwayuser
+Password: MyUbuntu!Desktop_7284
+
+💡 Why use a Railway Variable?
+
+The password should not be written directly into:
+
+Dockerfile
+
+
+or:
+
+start.sh
+
+
+and should never be committed to GitHub.
+
+Instead:
+
+Railway Variable
+       │
+       │ RDP_PASSWORD
+       ▼
+   Container
+       │
+       ▼
+railwayuser password
+
+
+This keeps your password out of the source code.
+
+🔄 6️⃣ Redeploy After Adding the Password
+
+After adding:
+
+RDP_PASSWORD
+
+
+Railway may automatically redeploy your service.
+
+If it does not, restart/redeploy the service manually.
+
+The container needs to restart so that it receives the new variable.
+
+🌐 7️⃣ Configure Railway TCP Proxy
+
+This step is required.
+
+RDP uses TCP, while a normal Railway public domain is intended for web traffic.
+
+Your container listens for RDP on:
 
 3389
 
 
-The Dockerfile contains:
-
-EXPOSE 3389
-
-
-This tells Railway that the application uses port 3389.
-
-However:
-
-EXPOSE 3389 alone does NOT make RDP accessible from the internet.
-
-You still need Railway TCP Proxy.
-
-14. Configure Railway TCP Proxy
-
-This is the step that allows Windows Remote Desktop to reach XRDP.
-
-Open your Railway service.
-
-Go to:
+Go to your Railway service:
 
 Settings
-
-
-Then find the networking section.
-
-Look for:
-
+   ↓
+Networking
+   ↓
 TCP Proxy
 
 
-Create a TCP Proxy.
-
-Set the destination/internal port to:
+Create a TCP Proxy for:
 
 3389
 
+⚠️ Important: HTTP Domain ≠ RDP Address
 
-Save/create the TCP proxy.
-
-15. Find Your TCP Proxy Address
-
-After creating the TCP Proxy, Railway will provide a public TCP address.
-
-It will look approximately like:
-
-something.proxy.rlwy.net:12345
-
-
-The exact hostname and port will be different for your project.
-
-For example:
-
-ubuntu-rdp.proxy.rlwy.net:18472
-
-
-The example above is NOT a real address.
-
-Use the exact address Railway gives you.
-
-You need BOTH:
-
-Hostname
-
-
-and
-
-Port
-
-
-For example:
-
-Hostname:
-ubuntu-rdp.proxy.rlwy.net
-
-Port:
-18472
-
-16. Do NOT Use the Railway HTTP Domain
-
-Railway may also provide an HTTP/HTTPS domain.
-
-It can look something like:
+Railway may provide an address similar to:
 
 https://your-project.up.railway.app
 
 
-Do NOT put that address into Windows Remote Desktop.
+❌ Do not use this for Windows Remote Desktop.
 
-That is an HTTP/HTTPS address.
+You need the TCP Proxy address.
 
-RDP requires the Railway TCP Proxy.
-
-You want something like:
+Railway will provide something similar to:
 
 something.proxy.rlwy.net:12345
 
-17. Check Railway Logs
 
-Before trying Windows Remote Desktop, open the Railway deployment logs.
+✅ This is what you use for RDP.
 
-You should see messages similar to:
+📡 8️⃣ Find Your TCP Proxy Address
 
-Ubuntu XFCE + XRDP
-User: railwayuser
-Setting RDP password...
-Starting XRDP session manager...
-Starting XRDP server on port 3389...
+After creating the TCP Proxy, Railway will show you the public TCP hostname and port.
+
+For example:
+
+Hostname:
+abc123.proxy.rlwy.net
+
+Port:
+18472
 
 
-The exact log formatting may differ.
+Your actual values will be different.
 
-The important thing is that XRDP starts successfully.
+Combine them like this:
 
-18. Connect From Windows 10
+abc123.proxy.rlwy.net:18472
 
-On your Windows 10 computer, press:
+
+Keep this address available.
+
+You will enter it into Windows Remote Desktop.
+
+🪟 9️⃣ Connect From Windows 10
+
+On your Windows 10 computer:
+
+Press:
 
 Windows Key + R
 
@@ -371,50 +324,52 @@ Type:
 mstsc
 
 
-Press:
+Then press:
 
 Enter
 
 
-This opens:
+Windows will open:
 
 Remote Desktop Connection
 
-19. Enter the Railway TCP Address
+🖥️ 🔟 Enter the Railway RDP Address
 
-In the Remote Desktop Connection window, find:
+Find the:
 
 Computer:
 
 
-Enter the Railway TCP Proxy address.
+field.
+
+Enter your Railway TCP Proxy address.
 
 For example:
 
-something.proxy.rlwy.net:12345
+abc123.proxy.rlwy.net:18472
 
-
-Use the actual hostname and port provided by Railway.
 
 Then click:
 
 Connect
 
-20. Enter the Username
+🔑 1️⃣1️⃣ Enter Your Credentials
 
-When Windows asks for credentials, enter:
+Windows will ask for your login credentials.
 
+Use:
+
+Username
 railwayuser
 
+Password
 
-For the password, enter the password you created in Railway.
+Use the password you created in Railway:
 
-For example, if you created:
-
-RDP_PASSWORD=MyUbuntu!Desktop_7284
+RDP_PASSWORD
 
 
-then enter:
+For example:
 
 Username:
 railwayuser
@@ -422,298 +377,272 @@ railwayuser
 Password:
 MyUbuntu!Desktop_7284
 
-21. First Connection
+🎉 1️⃣2️⃣ Ubuntu Desktop
 
-Windows may show a security warning because the RDP server certificate is not trusted by your Windows computer.
+If everything is configured correctly, Windows Remote Desktop should open your Ubuntu XFCE desktop.
 
-This can happen with XRDP.
+You should now have:
 
-If you are sure you are connecting to your own Railway server, verify that the hostname is the one Railway provided.
-
-Then continue the connection.
-
-22. What You Should See
-
-If everything is working correctly, Windows Remote Desktop should open an Ubuntu XFCE desktop.
-
-You should see a lightweight Linux desktop environment.
-
-The desktop is running inside the Railway container.
-
-You can open applications such as:
-
-Terminal
-File Manager
-Web Browser
-Text Editor
+Windows 10
+     │
+     │ RDP
+     ▼
+Railway
+     │
+     ▼
+Ubuntu 22.04
+     │
+     ▼
+XFCE Desktop
 
 
-depending on which XFCE packages are installed.
+🎉 You are now remotely connected to Ubuntu.
 
-23. Very Important: Railway Is Not the Same as a Normal VPS
+🔍 Check Railway Logs
 
-This project runs Ubuntu inside a Railway container.
+If you want to verify that XRDP started correctly, open:
 
-It is NOT the same as renting a traditional Ubuntu VPS.
-
-Containers can be restarted, redeployed, or replaced.
-
-Therefore:
-
-Do not assume files saved inside the container will permanently remain there.
-
-If you need permanent data, you need to configure appropriate persistent storage.
-
-24. Changing the RDP Password
-
-You do not need to modify the Dockerfile.
-
-Go to Railway:
-
-Your Project
-    ↓
+Railway
+   ↓
 Your Service
-    ↓
-Variables
-    ↓
-RDP_PASSWORD
+   ↓
+Deployments
+   ↓
+Logs
 
 
-Change the value.
+You should see messages similar to:
 
-For example:
-
-Old:
-RDP_PASSWORD=OldPassword
-
-New:
-RDP_PASSWORD=NewStrongPassword!927
-
-
-Save the variable.
-
-Restart/redeploy the service if Railway does not automatically restart it.
-
-After the container restarts, use the new password.
-
-25. Changing the Username
-
-The current username is:
-
-railwayuser
-
-
-If you want to change it, you must modify the Dockerfile and start.sh.
-
-For a beginner, I recommend leaving the username as:
-
-railwayuser
-
-
-and only changing the password through Railway Variables.
-
-26. If RDP Says "Can't Connect"
-
-Check these things in order.
-
-Check 1 — Is Railway running?
-
-Open the Railway project and make sure the service is deployed successfully.
-
-Check 2 — Check the logs
-
-Look for:
-
+Ubuntu XFCE + XRDP
+User: railwayuser
+Setting RDP password...
+Starting XRDP session manager...
 Starting XRDP server on port 3389...
 
 
-If XRDP did not start, RDP will not work.
+The exact formatting may be different.
 
-Check 3 — Check TCP Proxy
+The important part is that XRDP starts successfully.
 
-Make sure Railway TCP Proxy points to:
+🛠️ Troubleshooting
+❌ RDP Cannot Connect
+
+Check these items:
+
+1. Is the Railway service running?
+
+Make sure the deployment completed successfully.
+
+2. Is TCP Proxy enabled?
+
+Make sure you created a TCP Proxy pointing to:
 
 3389
 
-Check 4 — Check the Windows address
+3. Are you using the TCP address?
 
-Make sure you are using:
+Correct:
 
-something.proxy.rlwy.net:PORT
+abc123.proxy.rlwy.net:18472
 
 
-not:
+Incorrect:
 
-https://something.up.railway.app
+https://abc123.up.railway.app
 
-Check 5 — Check the port
+4. Did you use the correct port?
 
-The TCP Proxy port is usually NOT 3389 on the public side.
+Railway may give you an external port such as:
 
-For example, Railway might give:
-
-something.proxy.rlwy.net:18472
+18472
 
 
 Use:
 
-something.proxy.rlwy.net:18472
+hostname:18472
 
 
-not:
+Do not automatically assume the public port is 3389.
 
-something.proxy.rlwy.net:3389
+❌ Login Failed
 
-27. If Login Fails
-
-Make sure the username is exactly:
+Your username should be exactly:
 
 railwayuser
 
 
-Then check the Railway variable.
-
-It should be:
-
-RDP_PASSWORD
-
-
-not:
-
-PASSWORD
-
-
-not:
-
-RDP_PASS
-
-
-The name must be:
-
-RDP_PASSWORD
-
-
-Also make sure you restarted/redeployed the container after changing the variable.
-
-28. If You Get a Black Screen
-
-If RDP connects but you see a black screen or immediately get disconnected:
-
-Check Railway logs.
-Make sure XFCE was installed successfully.
-Make sure /home/railwayuser/.xsession contains:
-startxfce4
-
-Make sure the container successfully starts xrdp-sesman.
-Restart/redeploy the Railway service.
-29. If the Password Is Not Working
-
-Remember that the password comes from:
+Your password should be the current value of:
 
 RDP_PASSWORD
 
 
 in Railway Variables.
 
-For example:
+Make sure you didn't accidentally create:
 
-RDP_PASSWORD=MyUbuntu!Desktop_7284
-
-
-The login should be:
-
-Username: railwayuser
-Password: MyUbuntu!Desktop_7284
-
-
-Do not include:
-
-RDP_PASSWORD=
-
-
-when entering the password into Windows.
-
-Only enter the actual password.
-
-30. Security Warning
-
-A public RDP server can be discovered by automated internet scanners.
-
-Do NOT use an easy password such as:
-
-123456
+PASSWORD
 
 
 or:
 
-password
+RDP_PASS
 
 
-or:
+The variable must be:
 
-RailwayPassword123
+RDP_PASSWORD
+
+❌ Black Screen After Login
+
+If RDP connects but you get a black screen or are immediately disconnected:
+
+Check Railway logs.
+Confirm XFCE installed successfully.
+Confirm XRDP started successfully.
+Restart/redeploy the Railway service.
+
+The project configures XFCE as the XRDP desktop session.
+
+❌ Password Doesn't Work
+
+Go to:
+
+Railway
+   ↓
+Your Service
+   ↓
+Variables
 
 
-Use a strong random password.
-
-Also remember that anyone who gets the RDP credentials may be able to access the Ubuntu desktop.
-
-31. Never Put Your Real Password in GitHub
-
-Do NOT change the Dockerfile to:
-
-echo "railwayuser:MyRealPassword" | chpasswd
-
-
-Do NOT put your real password in:
-
-README.md
-Dockerfile
-start.sh
-
-
-Use Railway Variables instead:
+Check:
 
 RDP_PASSWORD
 
 
-This keeps the password out of your Git repository.
+For example:
 
-32. Complete Setup Checklist
+RDP_PASSWORD = MyNewPassword!927
 
-Use this checklist if you are doing the setup for the first time.
 
-[ ] Create GitHub account
-[ ] Create GitHub repository
-[ ] Upload Dockerfile
-[ ] Upload start.sh
-[ ] Upload README.md
-[ ] Create Railway account
-[ ] Create Railway project
-[ ] Connect GitHub repository
-[ ] Wait for Docker build
-[ ] Confirm deployment succeeds
-[ ] Open Railway Variables
-[ ] Create RDP_PASSWORD
-[ ] Enter a strong password
-[ ] Save the variable
-[ ] Redeploy/restart if necessary
-[ ] Open Railway Settings
-[ ] Find TCP Proxy
-[ ] Create TCP Proxy
-[ ] Set internal port to 3389
-[ ] Copy Railway TCP hostname
-[ ] Copy Railway TCP external port
-[ ] Open Windows 10
-[ ] Press Windows + R
-[ ] Run mstsc
-[ ] Enter Railway TCP hostname:port
-[ ] Connect
-[ ] Username = railwayuser
-[ ] Password = your RDP_PASSWORD
-[ ] Ubuntu XFCE desktop should appear
+Then restart/redeploy the service.
 
-33. Final Connection Example
+Use:
+
+Username: railwayuser
+Password: MyNewPassword!927
+
+🔐 Security
+Use a Strong Password
+
+A public RDP endpoint can be discovered by automated internet scanners.
+
+Do not use passwords such as:
+
+123456
+password
+admin
+ubuntu
+RailwayPassword123
+
+
+Use a strong password containing:
+
+✅ Uppercase letters
+✅ Lowercase letters
+✅ Numbers
+✅ Special characters
+✅ 12+ characters
+
+Example format:
+
+MyUbuntu!Desktop_7284
+
+
+This is an example only. Do not use the example password.
+
+🚫 Never Commit Secrets
+
+Never put these in GitHub:
+
+❌ Real RDP password
+❌ API keys
+❌ SSH private keys
+❌ Access tokens
+❌ Other secrets
+
+
+Your RDP password belongs in the Railway environment variable:
+
+RDP_PASSWORD
+
+💾 Important: Container Storage
+
+This project runs Ubuntu inside a Railway container.
+
+A container is not the same thing as a traditional VPS.
+
+The container may be restarted, redeployed, or replaced.
+
+Therefore, do not assume that files saved inside the container will always survive a redeployment.
+
+If you need persistent files/data, configure appropriate persistent storage separately.
+
+👤 RDP User
+
+The default RDP username is:
+
+railwayuser
+
+
+For a beginner setup, it is recommended to leave the username unchanged.
+
+The password can be changed at any time through:
+
+Railway → Variables → RDP_PASSWORD
+
+📋 Complete Setup Checklist
+
+Follow this checklist from top to bottom:
+
+☐ Create GitHub account
+☐ Create GitHub repository
+☐ Upload Dockerfile
+☐ Upload start.sh
+☐ Upload README.md
+
+☐ Create Railway account
+☐ Create Railway project
+☐ Connect GitHub repository
+☐ Deploy the project
+☐ Wait for Docker build
+☐ Confirm deployment succeeds
+
+☐ Open Railway Variables
+☐ Create RDP_PASSWORD
+☐ Set a strong password
+☐ Save the variable
+☐ Restart/redeploy if necessary
+
+☐ Open Railway Settings
+☐ Open Networking
+☐ Create TCP Proxy
+☐ Set internal port to 3389
+
+☐ Copy Railway TCP hostname
+☐ Copy Railway TCP external port
+
+☐ Open Windows 10
+☐ Press Windows + R
+☐ Run mstsc
+☐ Enter Railway TCP hostname:port
+☐ Click Connect
+
+☐ Username = railwayuser
+☐ Password = your RDP_PASSWORD
+
+☐ Ubuntu XFCE desktop appears
+
+🔗 Final Connection Example
 
 Suppose Railway gives you:
 
@@ -724,7 +653,7 @@ TCP Port:
 18472
 
 
-In Windows Remote Desktop, enter:
+Windows Remote Desktop should use:
 
 abc123.proxy.rlwy.net:18472
 
@@ -738,103 +667,87 @@ railwayuser
 and:
 
 Password:
-YOUR_RDP_PASSWORD
+your RDP_PASSWORD
 
 
-Your actual Railway hostname and port will be different.
+⚠️ abc123.proxy.rlwy.net:18472 is only an example. Use the actual address provided by your Railway project.
 
-34. Final Architecture
+🧩 Final Architecture
+                         INTERNET
+                            │
+                            │
+                            ▼
+                  ┌──────────────────┐
+                  │    Windows 10    │
+                  │                  │
+                  │ Remote Desktop   │
+                  │      (mstsc)     │
+                  └────────┬─────────┘
+                           │
+                           │ RDP / TCP
+                           ▼
+                  ┌──────────────────┐
+                  │ Railway TCP Proxy│
+                  │                  │
+                  │ hostname : port  │
+                  └────────┬─────────┘
+                           │
+                           │ TCP
+                           ▼
+        ┌───────────────────────────────────┐
+        │        Railway Container          │
+        │                                   │
+        │          Ubuntu 22.04             │
+        │                │                  │
+        │           XRDP : 3389              │
+        │                │                  │
+        │              XFCE                 │
+        │                │                  │
+        │        Ubuntu Desktop             │
+        │                                   │
+        └───────────────────────────────────┘
 
-The completed setup is:
+📌 Quick Reference
+Setting	Value
+🐧 OS	Ubuntu 22.04
+🖥️ Desktop	XFCE
+🔐 Remote Protocol	XRDP / RDP
+🔌 Container Port	3389
+👤 Username	railwayuser
+🔑 Password Variable	RDP_PASSWORD
+☁️ Hosting	Railway
+🪟 Client	Windows Remote Desktop
+🛜 Public Access	Railway TCP Proxy
+🚀 Quick Start
 
-                  INTERNET
-                     |
-                     |
-              Windows 10 PC
-                     |
-                     | RDP
-                     |
-                     v
-        Railway TCP Proxy
-        hostname:port
-                     |
-                     |
-                     v
-        +-----------------------+
-        |   Railway Container   |
-        |                       |
-        |   Ubuntu 22.04        |
-        |        |              |
-        |      XRDP :3389        |
-        |        |              |
-        |      XFCE              |
-        |        |              |
-        |   Ubuntu Desktop      |
-        +-----------------------+
+If you already understand the setup, the entire process is:
 
-35. Important Reminder
+1. Push this project to GitHub
+          ↓
+2. Deploy the GitHub repo on Railway
+          ↓
+3. Add Railway Variable:
+   RDP_PASSWORD=your-strong-password
+          ↓
+4. Create Railway TCP Proxy → 3389
+          ↓
+5. Copy Railway TCP hostname:port
+          ↓
+6. Open mstsc on Windows 10
+          ↓
+7. Enter hostname:port
+          ↓
+8. Username: railwayuser
+          ↓
+9. Enter your RDP_PASSWORD
+          ↓
+10. Enjoy Ubuntu XFCE 🎉
 
-The three important values are:
+⭐ Notes
 
-RDP Host:
-<provided by Railway TCP Proxy>
+This project is intended as a simple way to run an Ubuntu graphical desktop in a Railway container and access it remotely using RDP.
 
-RDP Port:
-<provided by Railway TCP Proxy>
+For production or sensitive workloads, consider additional security controls rather than exposing RDP directly to the public internet.
 
-RDP Username:
-railwayuser
+<p align="center"> <strong>🖥️ Ubuntu + XFCE + XRDP + Railway</strong> <br> <sub>Simple remote Ubuntu desktop over RDP.</sub> </p> ``` :::
 
-
-And the password is:
-
-RDP_PASSWORD
-
-
-which you set in Railway Variables.
-
-Do not use the Railway HTTP/HTTPS domain for RDP.
-
-Use the Railway TCP Proxy address.
-
-36. Quick Version
-
-Once everything has been configured, connecting is simply:
-
-Windows 10
-    ↓
-mstsc
-    ↓
-<RAILWAY-TCP-HOST>:<RAILWAY-TCP-PORT>
-    ↓
-Username: railwayuser
-    ↓
-Password: value of RDP_PASSWORD
-    ↓
-Ubuntu XFCE Desktop
-
-
-That's it.
-
-:::
-
-### One correction I'd make to the project itself
-
-There's one thing I'd improve before you push this: **don't use a fallback password in `start.sh`**. If you accidentally forget to set `RDP_PASSWORD`, the container shouldn't quietly start with a known/default password.
-
-I recommend changing this:
-
-```bash
-RDP_PASSWORD="${RDP_PASSWORD:-ChangeMe123!}"
-
-
-to a required variable check:
-
-if [ -z "$RDP_PASSWORD" ]; then
-    echo "ERROR: RDP_PASSWORD is not set."
-    echo "Please add RDP_PASSWORD in Railway Variables."
-    exit 1
-fi
-
-
-That way, a missing password causes the deployment to fail rather than exposing an easily guessed RDP credential.

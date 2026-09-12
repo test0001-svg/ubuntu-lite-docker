@@ -1,51 +1,35 @@
 #!/bin/bash
-
 set -e
 
-# Default RDP password. Override at runtime with the RDP_PASSWORD variable
-# (e.g. a Railway variable) - the username is always "ubuntu".
 RDP_PASSWORD="${RDP_PASSWORD:-1122}"
 
 echo "========================================"
-echo " Ubuntu MATE (24.04 LTS) + XRDP"
+echo " Ubuntu MATE + XRDP"
 echo "========================================"
 echo "RDP user: ubuntu"
 echo "========================================"
 
-# Apply the password on every boot (default: 1122)
-HASH=$(openssl passwd -6 -salt xrdp1122 "$RDP_PASSWORD")
-DAYS=$(( $(date +%s) / 86400 ))
-grep -v '^ubuntu:' /etc/shadow > /tmp/sh.new
-echo "ubuntu:${HASH}:${DAYS}:0:99999:7:::" >> /tmp/sh.new
-cat /tmp/sh.new > /etc/shadow
-rm -f /tmp/sh.new
+# Set the RDP password safely at every container start.
+echo "ubuntu:${RDP_PASSWORD}" | chpasswd
 
-# Make sure the user owns their home directory
-chown -R ubuntu:ubuntu /home/ubuntu
+# Ensure the user's home and runtime directories are usable.
+mkdir -p /home/ubuntu /run/user/1000 /run/dbus /var/run/xrdp
+chown -R ubuntu:ubuntu /home/ubuntu /run/user/1000
+chown xrdp:xrdp /var/run/xrdp
 
-# Start D-Bus system daemon if needed
-mkdir -p /run/dbus
-
+# Start the system D-Bus daemon if it is not already running.
 if ! pgrep -x dbus-daemon >/dev/null 2>&1; then
     dbus-daemon --system || true
 fi
 
-# Clean up stale XRDP files
+# Clean stale runtime files from a previous container process.
 rm -f /var/run/xrdp/xrdp.pid
 rm -f /var/run/xrdp/xrdp-sesman.pid
 
-# Make sure XRDP runtime directory exists
-mkdir -p /var/run/xrdp
-chown xrdp:xrdp /var/run/xrdp
-
 echo "Starting XRDP session manager..."
-
-# Start XRDP session manager
 xrdp-sesman &
 
 sleep 2
 
 echo "Starting XRDP server on port 3389..."
-
-# Keep XRDP in foreground so Railway keeps the container alive
 exec xrdp --nodaemon

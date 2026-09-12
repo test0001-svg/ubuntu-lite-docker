@@ -1,25 +1,28 @@
 FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=UTC
 
-# Stock Ubuntu MATE desktop + XRDP + Xorg
+# Ubuntu MATE desktop + XRDP/Xorg + utilities
 RUN apt-get update && apt-get install -y \
     ubuntu-mate-desktop \
     xrdp \
     xorg \
     xorgxrdp \
     dbus-x11 \
+    dbus \
     sudo \
     curl \
     ca-certificates \
     openssl \
     x11-xserver-utils \
+    procps \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Real Firefox ESR (Snap Firefox does not work correctly in a normal
-# Docker/Railway container because Snap expects systemd).
-RUN curl -fsSL "https://download.mozilla.org/?product=firefox-esr-latest&os=linux64&lang=en-US" -o /tmp/firefox.tar.xz \
+# Install Mozilla Firefox ESR without Snap (Snap/systemd is not suitable for this container)
+RUN curl -fsSL "https://download.mozilla.org/?product=firefox-esr-latest&os=linux64&lang=en-US" \
+    -o /tmp/firefox.tar.xz \
     && tar xJf /tmp/firefox.tar.xz -C /opt \
     && rm -f /tmp/firefox.tar.xz \
     && printf '#!/bin/sh\nexec /opt/firefox/firefox "$@"\n' > /usr/bin/firefox-esr \
@@ -47,14 +50,9 @@ RUN curl -fsSL "https://download.mozilla.org/?product=firefox-esr-latest&os=linu
        'text/html=firefox-esr.desktop' \
        > /etc/mimeapps.list
 
-# RDP account.
-# ubuntu-mate-desktop can create an "ubuntu" account in some package
-# configurations, so do NOT blindly run useradd. Make this step idempotent.
-# Default RDP credentials:
-#   username: ubuntu
-#   password: 1122
+# RDP account: keep Linux login name "ubuntu"; display/full name is "Ubuntu MATE".
 RUN if id ubuntu >/dev/null 2>&1; then \
-        usermod -s /bin/bash ubuntu;  \
+        usermod -s /bin/bash ubuntu; \
     else \
         useradd -m -s /bin/bash ubuntu; \
     fi \
@@ -64,57 +62,71 @@ RUN if id ubuntu >/dev/null 2>&1; then \
     && echo 'ubuntu:1122' | chpasswd \
     && chown -R ubuntu:ubuntu /home/ubuntu
 
-# MATE session + XRDP configuration
-RUN echo 'mate-session' > /home/ubuntu/.xsession \
-    && chown ubuntu:ubuntu /home/ubuntu/.xsession \
-    && printf '%s\n' \
+# XRDP must start a real per-session D-Bus + MATE session.
+RUN printf '%s\n' \
        '#!/bin/sh' \
+       'export LANG=C.UTF-8' \
+       'export LANGUAGE=C.UTF-8' \
+       'export LC_ALL=C.UTF-8' \
+       'export XDG_CURRENT_DESKTOP=MATE' \
+       'export XDG_SESSION_DESKTOP=mate' \
+       'export DESKTOP_SESSION=mate' \
+       'export XDG_CONFIG_DIRS=/etc/xdg/xdg-mate:/etc/xdg' \
+       'export XDG_DATA_DIRS=/usr/share/mate:/usr/share/ubuntu-mate:/usr/local/share:/usr/share' \
        'unset DBUS_SESSION_BUS_ADDRESS' \
        'unset XDG_RUNTIME_DIR' \
-       'exec /usr/bin/mate-session' \
+       'exec dbus-run-session -- /usr/bin/mate-session' \
        > /etc/xrdp/startwm.sh \
-    && chmod +x /etc/xrdp/startwm.sh \
+    && chmod 755 /etc/xrdp/startwm.sh \
+    && printf '%s\n' \
+       'mate-session' \
+       > /home/ubuntu/.xsession \
+    && chown ubuntu:ubuntu /home/ubuntu/.xsession \
     && if [ -f /etc/X11/Xwrapper.config ]; then \
          sed -i 's/allowed_users=console/allowed_users=anybody/' /etc/X11/Xwrapper.config; \
        else \
          printf '%s\n' 'allowed_users=anybody' 'needs_root_rights=yes' > /etc/X11/Xwrapper.config; \
-       fi \
-    && mkdir -p /home/ubuntu/.config \
+       fi
+
+# Prepare MATE's runtime/config directories.
+RUN mkdir -p /home/ubuntu/.config \
     && cp /etc/mimeapps.list /home/ubuntu/.config/mimeapps.list \
-    && chown -R ubuntu:ubuntu /home/ubuntu/.config
+    && mkdir -p /run/user/1000 \
+    && chown -R ubuntu:ubuntu /home/ubuntu /run/user/1000 \
+    && runuser -u ubuntu -- env XDG_RUNTIME_DIR=/run/user/1000 \
+       dbus-run-session -- sh -c '\
+         gsettings set org.mate.interface gtk-theme "Yaru-MATE-dark" && \
+         gsettings set org.mate.interface icon-theme "Yaru-MATE-dark" && \
+         (gsettings set org.mate.interface color-scheme "prefer-dark" || true) && \
+         gsettings set org.mate.background picture-options "zoom" || true'
 
-# Preconfigure Ubuntu MATE dark theme.
-RUN mkdir -p /run/user/1000 \
-    && chown ubuntu:ubuntu /run/user/1000 \
-    && runuser -u ubuntu -- env XDG_RUNTIME_DIR=/run/user/1000 dbus-run-session -- sh -c '\
-       gsettings set org.mate.interface gtk-theme "Yaru-MATE-dark" && \
-       gsettings set org.mate.interface icon-theme "Yaru-MATE-dark" && \
-       (gsettings set org.mate.interface color-scheme "prefers-dark" || true) && \
-       gsettings set org.gnome.desktop.background picture-uri "file:///usr/share/backgrounds/ubuntu-mate-noble/numbat_wallpaper_dark_3480x2160.jpg" && \
-       gsettings set org.gnome.desktop.background picture-uri-dark "file:///usr/share/backgrounds/ubuntu-mate-noble/numbat_wallpaper_dark_3480x2160.jpg" && \
-       gsettings set org.mate.background picture-filename "/usr/share/backgrounds/ubuntu-mate-noble/numbat_wallpaper_dark_3480x2160.jpg" && \
-       gsettings set org.mate.background picture-options "zoom"'
-
-# Disable services/components that are not useful inside a container.
+# Disable only hardware/service components that are inappropriate in a container.
+# Keep the MATE panel, menu, Caja, settings daemon, notifications, and normal apps.
 RUN for f in mate-power-manager \
              ayatana-indicator-power \
              ayatana-indicator-printers \
-             print-applet \
-             update-notifier; do \
+             print-applet; do \
         if [ -f "/etc/xdg/autostart/$f.desktop" ]; then \
             mv "/etc/xdg/autostart/$f.desktop" "/etc/xdg/autostart/$f.desktop.disabled"; \
         fi; \
     done
 
-# Apply available Ubuntu security/bug-fix updates at build time.
+# Avoid the Ubuntu crash-report popup in a container.
+RUN mkdir -p /etc/default \
+    && printf '%s\n' \
+       '# Disable Apport crash-report UI in the container.' \
+       'enabled=0' \
+       > /etc/default/apport \
+    && rm -f /var/crash/*
+
+# Apply security/bug-fix updates at build time.
 RUN apt-get update \
     && apt-get -y full-upgrade \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 COPY start.sh /start.sh
-RUN chmod +x /start.sh
+RUN chmod 755 /start.sh
 
 EXPOSE 3389
-
 CMD ["/start.sh"]
